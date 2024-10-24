@@ -11,6 +11,8 @@ from PIL import Image
 from torchvision.datasets.utils import download_and_extract_archive, download_url, verify_str_arg
 from torchvision.datasets.vision import VisionDataset
 
+import kaggle
+
 
 class PytorchStanfordCars(VisionDataset):
     """`Stanford Cars <https://ai.stanford.edu/~jkrause/cars/car_dataset.html>`_ Dataset
@@ -40,17 +42,19 @@ class PytorchStanfordCars(VisionDataset):
         split: str = "train",
         transform: Optional[Callable] = None,
         target_transform: Optional[Callable] = None,
-        download: bool = False,
+        download: bool = False
     ) -> None:
 
         try:
             import scipy.io as sio
         except ImportError:
-            raise RuntimeError("Scipy is not found. This dataset needs to have scipy installed: pip install scipy")
+            raise RuntimeError(
+                "Scipy is not found. This dataset needs to have scipy installed: pip install scipy")
 
         super().__init__(root, transform=transform, target_transform=target_transform)
 
         self._split = verify_str_arg(split, "split", ("train", "test"))
+        self._raw_folder = pathlib.Path(root)
         self._base_folder = pathlib.Path(root) / "stanford_cars"
         devkit = self._base_folder / "devkit"
 
@@ -65,17 +69,20 @@ class PytorchStanfordCars(VisionDataset):
             self.download()
 
         if not self._check_exists():
-            raise RuntimeError("Dataset not found. You can use download=True to download it")
+            raise RuntimeError(
+                "Dataset not found. You can use download=True to download it")
 
         self._samples = [
             (
                 str(self._images_base_path / annotation["fname"]),
-                annotation["class"] - 1,  # Original target mapping  starts from 1, hence -1
+                # Original target mapping  starts from 1, hence -1
+                annotation["class"] - 1,
             )
             for annotation in sio.loadmat(self._annotations_mat_path, squeeze_me=True)["annotations"]
         ]
 
-        self.classes = sio.loadmat(str(devkit / "cars_meta.mat"), squeeze_me=True)["class_names"].tolist()
+        self.classes = sio.loadmat(
+            str(devkit / "cars_meta.mat"), squeeze_me=True)["class_names"].tolist()
         self.class_to_idx = {cls: i for i, cls in enumerate(self.classes)}
 
     def __len__(self) -> int:
@@ -92,33 +99,35 @@ class PytorchStanfordCars(VisionDataset):
             target = self.target_transform(target)
         return pil_image, target
 
-
     def download(self) -> None:
         if self._check_exists():
             return
 
-        download_and_extract_archive(
-            url="https://ai.stanford.edu/~jkrause/cars/car_devkit.tgz",
-            download_root=str(self._base_folder),
-            md5="c3b158d763b6e2245038c8ad08e45376",
-        )
-        if self._split == "train":
-            download_and_extract_archive(
-                url="https://ai.stanford.edu/~jkrause/car196/cars_train.tgz",
-                download_root=str(self._base_folder),
-                md5="065e5b463ae28d29e77c1b4b166cfe61",
-            )
-        else:
-            download_and_extract_archive(
-                url="https://ai.stanford.edu/~jkrause/car196/cars_test.tgz",
-                download_root=str(self._base_folder),
-                md5="4ce7ebf6a94d07f1952d94dd34c4d501",
-            )
-            download_url(
-                url="https://ai.stanford.edu/~jkrause/car196/cars_test_annos_withlabels.mat",
-                root=str(self._base_folder),
-                md5="b0a2b23655a3edd16d84508592a98d10",
-            )
+        kaggle.api.dataset_download_files(
+            'rickyyyyyyy/torchvision-stanford-cars', path=str(self._raw_folder), unzip=True)
+
+        # download_and_extract_archive(
+        #     url="https://ai.stanford.edu/~jkrause/cars/car_devkit.tgz",
+        #     download_root=str(self._base_folder),
+        #     md5="c3b158d763b6e2245038c8ad08e45376",
+        # )
+        # if self._split == "train":
+        #     download_and_extract_archive(
+        #         url="https://ai.stanford.edu/~jkrause/car196/cars_train.tgz",
+        #         download_root=str(self._base_folder),
+        #         md5="065e5b463ae28d29e77c1b4b166cfe61",
+        #     )
+        # else:
+        #     download_and_extract_archive(
+        #         url="https://ai.stanford.edu/~jkrause/car196/cars_test.tgz",
+        #         download_root=str(self._base_folder),
+        #         md5="4ce7ebf6a94d07f1952d94dd34c4d501",
+        #     )
+        #     download_url(
+        #         url="https://ai.stanford.edu/~jkrause/car196/cars_test_annos_withlabels.mat",
+        #         root=str(self._base_folder),
+        #         md5="b0a2b23655a3edd16d84508592a98d10",
+        #     )
 
     def _check_exists(self) -> bool:
         if not (self._base_folder / "devkit").is_dir():
@@ -132,10 +141,13 @@ class Cars:
                  preprocess,
                  location=os.path.expanduser('~/data'),
                  batch_size=32,
-                 num_workers=16):
+                 num_workers=16,
+                 num_test_samples=None
+                 ):
         # Data loading code
 
-        self.train_dataset = PytorchStanfordCars(location, 'train', preprocess, download=True)
+        self.train_dataset = PytorchStanfordCars(
+            location, 'train', preprocess, download=True)
         self.train_loader = torch.utils.data.DataLoader(
             self.train_dataset,
             shuffle=True,
@@ -143,7 +155,8 @@ class Cars:
             num_workers=num_workers,
         )
 
-        self.test_dataset = PytorchStanfordCars(location, 'test', preprocess, download=True)
+        self.test_dataset = PytorchStanfordCars(
+            location, 'test', preprocess, download=True)
         self.test_loader = torch.utils.data.DataLoader(
             self.test_dataset,
             batch_size=batch_size,

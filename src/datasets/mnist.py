@@ -2,13 +2,14 @@ import os
 import torch
 import torchvision.datasets as datasets
 
+
 class MNIST:
     def __init__(self,
                  preprocess,
                  location=os.path.expanduser('~/data'),
                  batch_size=128,
-                 num_workers=16):
-
+                 num_workers=16,
+                 num_test_samples=None):
 
         self.train_dataset = datasets.MNIST(
             root=location,

@@ -54,7 +54,6 @@ def split_train_into_train_val(dataset, new_dataset_class_name, batch_size, num_
     if new_dataset_class_name == 'MNISTVal':
         assert trainset.indices[0] == 36044
 
-
     new_dataset = None
 
     new_dataset_class = type(new_dataset_class_name, (GenericDataset, ), {})
@@ -87,7 +86,8 @@ def get_dataset(dataset_name, preprocess, location, batch_size=128, num_workers=
             dataset_class = registry[dataset_name]
         else:
             base_dataset_name = dataset_name.split('Val')[0]
-            base_dataset = get_dataset(base_dataset_name, preprocess, location, batch_size, num_workers)
+            base_dataset = get_dataset(
+                base_dataset_name, preprocess, location, batch_size, num_workers)
             dataset = split_train_into_train_val(
                 base_dataset, dataset_name, batch_size, num_workers, val_fraction, max_val_samples)
             return dataset
@@ -99,3 +99,7 @@ def get_dataset(dataset_name, preprocess, location, batch_size=128, num_workers=
         preprocess, location=location, batch_size=batch_size, num_workers=num_workers, num_test_samples=num_test_samples
     )
     return dataset
+
+
+if __name__ == "__main__":
+    print(registry)

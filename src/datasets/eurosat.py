@@ -3,6 +3,7 @@ import torch
 import torchvision.datasets as datasets
 import re
 
+
 def pretify_classname(classname):
     l = re.findall(r'[A-Z](?:[a-z]+|[A-Z]*(?=[A-Z]|$))', classname)
     l = [i.lower() for i in l]
@@ -11,19 +12,21 @@ def pretify_classname(classname):
         return out + ' area'
     return out
 
+
 class EuroSATBase:
     def __init__(self,
                  preprocess,
                  test_split,
                  location='~/datasets',
                  batch_size=32,
-                 num_workers=16):
+                 num_workers=16,
+                 num_test_samples=None):
         # Data loading code
         traindir = os.path.join(location, 'EuroSAT_splits', 'train')
         testdir = os.path.join(location, 'EuroSAT_splits', test_split)
 
-
-        self.train_dataset = datasets.ImageFolder(traindir, transform=preprocess)
+        self.train_dataset = datasets.ImageFolder(
+            traindir, transform=preprocess)
         self.train_loader = torch.utils.data.DataLoader(
             self.train_dataset,
             shuffle=True,
@@ -39,7 +42,8 @@ class EuroSATBase:
         )
         idx_to_class = dict((v, k)
                             for k, v in self.train_dataset.class_to_idx.items())
-        self.classnames = [idx_to_class[i].replace('_', ' ') for i in range(len(idx_to_class))]
+        self.classnames = [idx_to_class[i].replace(
+            '_', ' ') for i in range(len(idx_to_class))]
         self.classnames = [pretify_classname(c) for c in self.classnames]
         ours_to_open_ai = {
             'annual crop': 'annual crop land',
@@ -62,8 +66,10 @@ class EuroSAT(EuroSATBase):
                  preprocess,
                  location='~/datasets',
                  batch_size=32,
-                 num_workers=16):
-        super().__init__(preprocess, 'test', location, batch_size, num_workers)
+                 num_workers=16,
+                 num_test_samples=None):
+        super().__init__(preprocess, 'test', location,
+                         batch_size, num_workers, num_test_samples)
 
 
 class EuroSATVal(EuroSATBase):
@@ -71,5 +77,7 @@ class EuroSATVal(EuroSATBase):
                  preprocess,
                  location='~/datasets',
                  batch_size=32,
-                 num_workers=16):
-        super().__init__(preprocess, 'val', location, batch_size, num_workers)
+                 num_workers=16,
+                 num_test_samples=None):
+        super().__init__(preprocess, 'val', location,
+                         batch_size, num_workers, num_test_samples)

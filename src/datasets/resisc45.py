@@ -57,7 +57,8 @@ class VisionClassificationDataset(VisionDataset, ImageFolder):
     def __init__(
         self,
         root: str,
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[Dict[str, Tensor]],
+                                      Dict[str, Tensor]]] = None,
         loader: Optional[Callable[[str], Any]] = pil_loader,
         is_valid_file: Optional[Callable[[str], bool]] = None,
     ) -> None:
@@ -251,7 +252,8 @@ class RESISC45Dataset(VisionClassificationDataset):
         self,
         root: str = "data",
         split: str = "train",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[Dict[str, Tensor]],
+                                      Dict[str, Tensor]]] = None,
     ) -> None:
         """Initialize a new RESISC45 dataset instance.
         Args:
@@ -277,15 +279,16 @@ class RESISC45Dataset(VisionClassificationDataset):
         )
 
 
-
 class RESISC45:
     def __init__(self,
                  preprocess,
                  location=os.path.expanduser('~/data'),
                  batch_size=32,
-                 num_workers=16):
+                 num_workers=16,
+                 num_test_samples=None):
 
-        self.train_dataset = RESISC45Dataset(root=location, split='train', transforms=preprocess)
+        self.train_dataset = RESISC45Dataset(
+            root=location, split='train', transforms=preprocess)
         self.train_loader = torch.utils.data.DataLoader(
             self.train_dataset,
             shuffle=True,
@@ -293,7 +296,8 @@ class RESISC45:
             num_workers=num_workers,
         )
 
-        self.test_dataset = RESISC45Dataset(root=location, split='test', transforms=preprocess)
+        self.test_dataset = RESISC45Dataset(
+            root=location, split='test', transforms=preprocess)
         self.test_loader = torch.utils.data.DataLoader(
             self.test_dataset,
             batch_size=batch_size,
@@ -301,4 +305,5 @@ class RESISC45:
         )
 
         # class names have _ so split on this for better zero-shot head
-        self.classnames = [' '.join(c.split('_')) for c in RESISC45Dataset.classes]
+        self.classnames = [' '.join(c.split('_'))
+                           for c in RESISC45Dataset.classes]

@@ -11,17 +11,21 @@ from torchvision.datasets.utils import (download_and_extract_archive,
                                         verify_str_arg)
 from torchvision.datasets.vision import VisionDataset
 
+
 def find_classes(directory: str) -> Tuple[List[str], Dict[str, int]]:
     """Finds the class folders in a dataset.
 
     See :class:`DatasetFolder` for details.
     """
-    classes = sorted(entry.name for entry in os.scandir(directory) if entry.is_dir())
+    classes = sorted(entry.name for entry in os.scandir(
+        directory) if entry.is_dir())
     if not classes:
-        raise FileNotFoundError(f"Couldn't find any class folder in {directory}.")
+        raise FileNotFoundError(
+            f"Couldn't find any class folder in {directory}.")
 
     class_to_idx = {cls_name: i for i, cls_name in enumerate(classes)}
     return classes, class_to_idx
+
 
 class PyTorchGTSRB(VisionDataset):
     """`German Traffic Sign Recognition Benchmark (GTSRB) <https://benchmark.ini.rub.de/>`_ Dataset.
@@ -53,22 +57,26 @@ class PyTorchGTSRB(VisionDataset):
         self._split = verify_str_arg(split, "split", ("train", "test"))
         self._base_folder = pathlib.Path(root) / "gtsrb"
         self._target_folder = (
-            self._base_folder / "GTSRB" / ("Training" if self._split == "train" else "Final_Test/Images")
+            self._base_folder / "GTSRB" /
+            ("Training" if self._split == "train" else "Final_Test/Images")
         )
 
         if download:
             self.download()
 
         if not self._check_exists():
-            raise RuntimeError("Dataset not found. You can use download=True to download it")
+            raise RuntimeError(
+                "Dataset not found. You can use download=True to download it")
 
         if self._split == "train":
             _, class_to_idx = find_classes(str(self._target_folder))
-            samples = make_dataset(str(self._target_folder), extensions=(".ppm",), class_to_idx=class_to_idx)
+            samples = make_dataset(str(self._target_folder), extensions=(
+                ".ppm",), class_to_idx=class_to_idx)
         else:
             with open(self._base_folder / "GT-final_test.csv") as csv_file:
                 samples = [
-                    (str(self._target_folder / row["Filename"]), int(row["ClassId"]))
+                    (str(self._target_folder /
+                     row["Filename"]), int(row["ClassId"]))
                     for row in csv.DictReader(csv_file, delimiter=";", skipinitialspace=True)
                 ]
 
@@ -91,7 +99,6 @@ class PyTorchGTSRB(VisionDataset):
             target = self.target_transform(target)
 
         return sample, target
-
 
     def _check_exists(self) -> bool:
         return self._target_folder.is_dir()
@@ -126,7 +133,8 @@ class GTSRB:
                  preprocess,
                  location=os.path.expanduser('~/data'),
                  batch_size=128,
-                 num_workers=16):
+                 num_workers=16,
+                 num_test_samples=None):
 
         # to fit with repo conventions for location
         self.train_dataset = PyTorchGTSRB(

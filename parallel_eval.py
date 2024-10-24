@@ -50,7 +50,7 @@ class Args:
         self.openclip_cachedir = '/data2/david3684/.cache/open_clip'
         self.initial_rank_ratio = 1.0
         self.low_rank_mode = 'SoRA'
-        self.pretrained_model = ''
+        self.pretrained_model = 'openai'
         self.scale_shared_weight = False
         self.num_test_samples = 2048
         self.no_shared_weight = False

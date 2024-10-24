@@ -28,9 +28,8 @@ from typing import List
 class Args:
     def __init__(self):
         self.model = 'ViT-L-14'
-        # , "DTD", "EuroSAT", "GTSRB", "MNIST", "RESISC45", "SUN397", "SVHN"
-        self.tasks = ["Cars"]
-        # Cars, DTD, EuroSAT, GTSRB, MNIST, RESISC45, SUN397, SVHN
+        self.tasks = ["Cars", "DTD", "EuroSAT", "GTSRB",
+                      "MNIST", "RESISC45", "SUN397", "SVHN"]
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.task_scale_factors = None
         self.save = '/data1/common_datasets/shared_weight/task_vector/ViT-L-14/'
@@ -156,7 +155,7 @@ if __name__ == '__main__':
         model_list[name] = model
 
     shared_weight_state_dict = torch.load(
-        '/data1/common_datasets/shared_weight/20241025/rankmin_config_20241025_uni_T8_vanilla.bin')
+        '/data1/common_datasets/shared_weight/20241025/vanilla_T8/rankmin_config_20241025_uni_T8_vanilla.bin')
     zero_shot_encoder = ImageEncoder(args, keep_lang=False)
     formatted_shared_weight = format_shared_weight(
         shared_weight_state_dict, zero_shot_encoder.state_dict())
@@ -171,8 +170,9 @@ if __name__ == '__main__':
 
     experiment_vector = EasyDict()
     experiment_vector.initial_rank_ratio_list = [
-        0.0, 0.001, 0.005, 0.01, 0.02, 0.04, 0.08, 0.16, 0.32, 0.5, 0.64, 1.0]
-    experiment_vector.scaling_coef_list = [0.2, 0.5, 1.0]
+        1.0, 0.64, 0.5, 0.32, 0.16, 0.08, 0.04, 0.02, 0.01, 0.005, 0.001, 0.0]
+
+    experiment_vector.scaling_coef_list = [0.2, 0.3, 0.4, 0.5, 0.6, 1.0]
 
     for initial_rank_ratio in experiment_vector.initial_rank_ratio_list:
         print(f'Initial rank ratio: {initial_rank_ratio}')

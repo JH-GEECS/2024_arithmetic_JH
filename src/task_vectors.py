@@ -4,18 +4,7 @@ import torch
 def make_task_vector_for_weight(args, finetuned_single_weight, pretrained_single_weight, key):
     """Create a task vector for a single weight tensor."""
     if args.low_rank_mode == 'SoRA':
-        if 'in_proj' in key:
-            # print(f"Shape of finetuned_single_weight: {finetuned_single_weight.shape}")
-            q_1, k_1, v_1 = finetuned_single_weight.chunk(3, dim=0)
-            q_2, k_2, v_2 = pretrained_single_weight.chunk(3, dim=0)
-            q_diff = q_1/torch.norm(q_1, p='fro') - q_2
-            k_diff = k_1/torch.norm(k_1, p='fro') - k_2
-            v_diff = v_1/torch.norm(v_1, p='fro') - v_2
-            diff = torch.cat([q_diff, k_diff, v_diff], dim=0)
-        else:
-            diff = finetuned_single_weight / \
-                torch.norm(finetuned_single_weight, p='fro') - \
-                pretrained_single_weight
+        diff = finetuned_single_weight - pretrained_single_weight
 
         # print(f"Shape of diff: {diff.shape}")
         U, s, V_T = torch.linalg.svd(diff.to(args.device), full_matrices=False)

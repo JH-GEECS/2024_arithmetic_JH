@@ -188,16 +188,15 @@ if __name__ == '__main__':
         low_rank_task_vector_sum = sum(low_rank_task_vectors.values())
 
         for task in args.tasks:
+            # print(f'Evaluate {task}')
+            # Evaluate sinlge task model
+            low_rank_single_task_encoder = low_rank_task_vectors[task].apply_to(
+                deepcopy(zero_shot_encoder), scaling_coef=1.0)
+            # single_task_reuslt = eval_single_dataset(low_rank_single_task_encoder, task, deepcopy(args))
+            ray_pack.append(eval_ray_runner.remote(
+                True, low_rank_single_task_encoder.state_dict(), task, deepcopy(args), each_scale_factor))
+            print(f'Single task model for {task} fetched')
             for each_scale_factor in experiment_vector.scaling_coef_list:
-                # print(f'Evaluate {task}')
-                # Evaluate sinlge task model
-                low_rank_single_task_encoder = low_rank_task_vectors[task].apply_to(
-                    deepcopy(zero_shot_encoder), scaling_coef=1.0)
-                # single_task_reuslt = eval_single_dataset(low_rank_single_task_encoder, task, deepcopy(args))
-                ray_pack.append(eval_ray_runner.remote(
-                    True, low_rank_single_task_encoder.state_dict(), task, deepcopy(args), each_scale_factor))
-                print(f'Single task model for {task} fetched')
-
                 # Evaluate multi task model
                 # print('Multi task model')
                 low_rank_multi_task_encoder = low_rank_task_vector_sum.apply_to(
